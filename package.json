@@ -1,6 +1,6 @@
 {
-  "name": "electron-vue-vite",
-  "version": "2.0.0",
+  "name": "gow-helper-ui",
+  "version": "0.2.0",
   "main": "dist/electron/main/index.js",
   "description": "Really simple Electron + Vue + Vite boilerplate.",
   "author": "草鞋没号 <308487730@qq.com>",
@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build && electron-builder"
+    "build": "vite build && electron-builder -mw"
   },
   "engines": {
     "node": ">=14.17.0"

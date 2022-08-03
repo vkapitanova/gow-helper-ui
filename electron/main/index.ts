@@ -49,6 +49,7 @@ async function createWindow() {
 
   if (app.isPackaged) {
     win.loadFile(indexHtml)
+    // win.webContents.openDevTools()
   } else {
     win.loadURL(url)
     // Open devTool if the app is not packaged
@@ -65,6 +66,8 @@ async function createWindow() {
     if (url.startsWith('https:')) shell.openExternal(url)
     return { action: 'deny' }
   })
+
+  win.setAlwaysOnTop(true)
 }
 
 app.whenReady().then(createWindow)
