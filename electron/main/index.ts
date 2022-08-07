@@ -37,6 +37,8 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(ROOT_PATH.public, 'favicon.ico'),
+    width: 900,
+    height: 800,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -53,7 +55,7 @@ async function createWindow() {
   } else {
     win.loadURL(url)
     // Open devTool if the app is not packaged
-    win.webContents.openDevTools()
+    // win.webContents.openDevTools()
   }
 
   // Test actively push message to the Electron-Renderer
@@ -118,13 +120,24 @@ desktopCapturer.getSources({ types: ['window'] }).then(async sources => {
   win.webContents.send('SET_SOURCES', names)
 })
 
-ipcMain.on('make-screenshot', (event, windowName) => {
-  console.log(windowName)
-  desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
-    for (const source of sources) {
-      if (source.name == windowName) {
-        win.webContents.send('SET_SCREENSHOT', source.thumbnail.toJPEG(100))
+let followScreen = false
+
+ipcMain.on('follow-screen', (event, windowName) => {
+  function captureScreen() {
+    desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
+      for (const source of sources) {
+        if (source.name == windowName) {
+          win.webContents.send('SET_SCREENSHOT', source.thumbnail.toJPEG(100))
+        }
       }
-    }
-  })
+    }) 
+    if (followScreen) setTimeout(captureScreen, 2000) 
+  }
+  followScreen = true
+  captureScreen()
+})
+
+ipcMain.on('pause-follow', (event, windowName) => {
+  console.log("pausing follow")
+  followScreen = false
 })

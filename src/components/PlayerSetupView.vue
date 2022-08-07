@@ -1,43 +1,36 @@
 <script setup lang="ts">
 import ColorChange from './ColorChange.vue'
+import { PainterSetupUI } from './ColorChange.vue'
+import { PlayerSetup, Painter } from '../logic/PlayerSetup'
 import { reactive } from 'vue';
+import { Tile } from '../logic/Tile';
+import { generateRandomKey } from '../utils/utils';
 
 const emit = defineEmits(['paint'])
 
 interface Props {
-  setup: Setup
-}
-interface Setup {
-  painters: Array<Colors>
-  frozenColors: Set<string>
-}
-interface Colors {
-  key: number
-  from?: string
-  to?: string
-  isActive: boolean
+  setup: PlayerSetup
 }
 
 const props = defineProps<Props>()
 
-let setup: Setup = props.setup
+let setup: PlayerSetup = props.setup
 const tilesList = ['YE', 'RE', 'GR', 'BL', 'BR', 'VI', 'SK']
-let allPainters: Array<Colors> = reactive([])
+let paintersUI: Array<[string, PainterSetupUI]> = reactive([])
 
-var lastKey = 0
 function addPainter() {
-  allPainters.push(reactive({key: lastKey, isActive: true}))
-  lastKey++
+  let setupUI: PainterSetupUI = {painter: {from: [], to: Tile.empty}, isActive: true}
+  paintersUI.push([generateRandomKey(), setupUI])
   updatePainters()
 }
 
 function removePainter(i: number) {
-  allPainters.splice(i, 1)
+  paintersUI.splice(i, 1)
   updatePainters()
 }
 
-function tryColoring(c: Colors) {
-    emit('paint', c.from!, c.to!)
+function tryColoring(p: PainterSetupUI) {
+    emit('paint', p.painter.from[0], p.painter.to)
 }
 
 function toggleFrozen(event: Event) {
@@ -49,17 +42,17 @@ function toggleFrozen(event: Event) {
 }
 
 function activatePainter(i: number) {
-  allPainters[i].isActive = true
+  paintersUI[i][1].isActive = true
   updatePainters()
 }
 
 function deactivatePainter(i: number) {
-  allPainters[i].isActive = false
+  paintersUI[i][1].isActive = false
   updatePainters()
 }
 
 function updatePainters() {
-  props.setup.painters = allPainters.filter((p) => p.isActive)
+  props.setup.painters = paintersUI.filter((p) => p[1].isActive).map((p) => p[1].painter)
 }
 </script>
 
@@ -70,7 +63,7 @@ function updatePainters() {
       <input type="button" v-for="t in tilesList" :class="t" :tile="t" @click="toggleFrozen" style="width:30px;height:30px;"/>
     </div>
     <div>Перекрасы: </div>
-    <ColorChange v-for="(p, i) in allPainters" :key="p.key" :colors="p" 
+    <ColorChange v-for="([key, p], i) in paintersUI" :key="key" :setup="p" 
       @removeme="removePainter(i)" @tryme="tryColoring(p)" @deactivated="deactivatePainter(i)" @activated="activatePainter(i)"/>
     <input type="button" value="Add" @click="addPainter" />
   </div>

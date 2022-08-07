@@ -1,15 +1,33 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { Painter } from '../logic/PlayerSetup';
+import { Tile } from '../logic/Tile';
 
-const props = defineProps(['colors'])
+export interface PainterSetupUI {
+  painter: Painter
+  isActive: boolean
+}
+interface ColorChangeProps {setup: PainterSetupUI}
+let props = defineProps<ColorChangeProps>()
+let setup = props.setup
 const emit = defineEmits(['removeme', 'tryme', 'deactivated', 'activated'])
 
-const tilesList = ['EM', 'YE', 'RE', 'GR', 'BL', 'BR', 'VI', 'SK', 'RS']
-const defaultTile = 'EM'
-let colors = props.colors
-colors.from = defaultTile
-colors.to = defaultTile
-colors.isActive = true
+const tilesMap: Map<string, Array<Tile>> = new Map([
+  ['EM', [Tile.empty]], 
+  ['YE', [Tile.yellow]], 
+  ['RE', [Tile.red]], 
+  ['GR', [Tile.green]], 
+  ['BL', [Tile.blue]], 
+  ['BR', [Tile.brown]],
+  ['VI', [Tile.violet]], 
+  ['SK', [Tile.skull]], 
+  ['RS', [Tile.rockSkull]],
+  ['ANY', [Tile.yellow, Tile.violet, Tile.red, Tile.green, Tile.brown, Tile.blue]]
+])
+
+let painter = setup.painter
+painter.from = [Tile.yellow]
+painter.to = Tile.yellow
+setup.isActive = true
 
 function removeMe() {
   emit('removeme')
@@ -20,27 +38,34 @@ function tryMe() {
 }
 
 function toggleActive() {
-  colors.isActive = !colors.isActive
-  if (colors.isActive) emit('activated')
+  setup.isActive = !setup.isActive
+  if (setup.isActive) emit('activated')
   else emit('deactivated')
 }
+
+function changeFrom(event: Event) {
+  let target = event.target as HTMLSelectElement
+  setup.painter.from = tilesMap.get(target.value)!
+}
+
+function changeTo(event: Event) {
+  let target = event.target as HTMLSelectElement
+  setup.painter.to = tilesMap.get(target.value)![0]
+}
+
 </script>
 
 <template>
-  <div :class="colors.isActive ? 'active' : 'inactive'">
-    <span>From: </span>
-    <select name="color-from" id="color-from" v-model="colors.from">
-        <option>none</option>
-        <option v-for="el in tilesList">{{ el }}</option>
+  <div :class="setup.isActive ? 'active' : 'inactive'">
+    <select name="color-from" id="color-from" @change="changeFrom">
+        <option v-for="el in tilesMap.keys()">{{ el }}</option>
     </select>
-    <span>To: </span>
-    <select name="color-to" id="color-to" v-model="colors.to">
-        <option>none</option>
-        <option v-for="el in tilesList">{{ el }}</option>
+    <select name="color-to" id="color-to" @change="changeTo">
+        <option v-for="el in tilesMap.keys()">{{ el }}</option>
     </select>
-    <input type="button" value="try" @click="tryMe" />
-    <input type="button" :value="colors.isActive ? 'deactivate' : 'activate'" @click="toggleActive" />
-    <input type="button" value="remove" @click="removeMe" />
+    <input type="button" value="🚀" @click="tryMe" />
+    <input type="button" :value="setup.isActive ? '⏸' : '▶️'" @click="toggleActive" />
+    <input type="button" value="❌" @click="removeMe" />
   </div>
 </template>
 

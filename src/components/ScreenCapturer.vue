@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue';
-import axios from 'axios'
+import { uploadPicture } from '../utils/upload_picture';
 
 const emit = defineEmits(['mapReloaded'])
 
@@ -17,27 +17,25 @@ function onChange(event: Event) {
 }
 
 function captureScreen() {
-    electronAPI.selectWindow(selectedWindow)
+  electronAPI.selectWindow(selectedWindow)
 }
 
+let previousResult: Array<string> | null = null
+
 function uploadImage() {
-  axios.put('http://localhost:5000/upload',
-      screenshotBuffer(),
-      {
-          headers: {
-              'Content-Type': 'image/jpeg'
-          }
-      }
-  ).then(function (data) {
-      console.log(data.data);
-      emit('mapReloaded', data.data.map)
+  uploadPicture(screenshotBuffer(), 'image/jpeg', (result) => {
+    if (previousResult == null || (!result.map.includes('UN')) && JSON.stringify(previousResult) !== JSON.stringify(result.map)) {
+      emit('mapReloaded', result.map)
+      previousResult = result.map
+    }
   })
 }
 
+function pauseFollow() {
+  electronAPI.pauseFollow()
+}
 
 onMounted(() => {
-  console.log(`the component is now mounted.`)
-  console.log(document)
   document.dispatchEvent(new Event('capturer-ready'))
 })
 
@@ -48,6 +46,7 @@ onMounted(() => {
     <select id="sources-list" @ready="setWindowNames" @change="onChange">
       <option v-for="name in windowNames">{{name}}</option>
     </select>
-    <input id="screen-capture-button" type="button" value="Capture" @click="captureScreen" @newimage="uploadImage"/>
+    <input id="screen-capture-button" type="button" value="Follow" @click="captureScreen" @newimage="uploadImage"/>
+    <input id="screen-capture-button" type="button" value="Pause" @click="pauseFollow"/>
   </div>
 </template>

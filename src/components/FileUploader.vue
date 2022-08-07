@@ -1,25 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import axios from "axios"
+import { ref, Ref } from 'vue'
+import { uploadPicture } from '../utils/upload_picture';
 
 const emit = defineEmits(['mapReloaded'])
 
-const file = ref(null)
+const file: Ref<HTMLInputElement | null> = ref(null)
 
 function submitForm() {
-  const selectedFile = file.value.files[0]
-  axios.put('http://localhost:5000/upload',
-      selectedFile,
-      {
-          headers: {
-              'Content-Type': selectedFile.type
-          }
-      }
-  ).then(function (data) {
-      console.log(data.data);
-      console.log("emitting event");
-      emit('mapReloaded', data.data.map)
-  })
+  if (file.value == null || file.value.files == null) {
+    console.log("Error: file is null")
+    return
+  }
+  const selectedFile = file.value.files![0]
+  uploadPicture(selectedFile, selectedFile.type, (result: any) => {emit('mapReloaded', result.map)})
 }
 </script>
 

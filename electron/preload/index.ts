@@ -98,7 +98,8 @@ ipcRenderer.on('SET_SOURCES', async (event, sources) => {
   console.log(sources)
   contextBridge.exposeInMainWorld('sources', sources)
   contextBridge.exposeInMainWorld('electronAPI', {
-    selectWindow: (windowName) => ipcRenderer.send('make-screenshot', windowName)
+    selectWindow: (windowName) => ipcRenderer.send('follow-screen', windowName),
+    pauseFollow: () => ipcRenderer.send('pause-follow')
   })
   if (document.getElementById("sources-list") != null) {
     document.getElementById("sources-list").dispatchEvent(new Event('ready'))
