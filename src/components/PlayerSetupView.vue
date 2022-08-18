@@ -1,37 +1,18 @@
 <script setup lang="ts">
-import ColorChange from './ColorChange.vue'
-import { PainterSetupUI } from './ColorChange.vue'
-import { PlayerSetup, Painter } from '../logic/PlayerSetup'
+import { Painter, PlayerSetup } from '../logic/PlayerSetup';
 import { reactive } from 'vue';
-import { Tile } from '../logic/Tile';
-import { generateRandomKey } from '../utils/utils';
+import PaintersSetup from './PaintersSetup.vue';
 
-const emit = defineEmits(['paint'])
+const emit = defineEmits(['paint', 'highlight', 'dehighlight'])
 
 interface Props {
   setup: PlayerSetup
 }
 
 const props = defineProps<Props>()
+let setup = props.setup
 
-let setup: PlayerSetup = props.setup
-const tilesList = ['YE', 'RE', 'GR', 'BL', 'BR', 'VI', 'SK']
-let paintersUI: Array<[string, PainterSetupUI]> = reactive([])
-
-function addPainter() {
-  let setupUI: PainterSetupUI = {painter: {from: [], to: Tile.empty}, isActive: true}
-  paintersUI.push([generateRandomKey(), setupUI])
-  updatePainters()
-}
-
-function removePainter(i: number) {
-  paintersUI.splice(i, 1)
-  updatePainters()
-}
-
-function tryColoring(p: PainterSetupUI) {
-    emit('paint', p.painter.from[0], p.painter.to)
-}
+const forzenTilesList = ['YE', 'RE', 'GR', 'BL', 'BR', 'VI', 'SK']
 
 function toggleFrozen(event: Event) {
   const target = event.target as HTMLElement
@@ -41,31 +22,30 @@ function toggleFrozen(event: Event) {
   else setup.frozenColors.add(tile)
 }
 
-function activatePainter(i: number) {
-  paintersUI[i][1].isActive = true
-  updatePainters()
+// let paintersSetup = reactive({painters: []})
+
+function tryColoring(p: Painter) {
+  emit('paint', p)
 }
 
-function deactivatePainter(i: number) {
-  paintersUI[i][1].isActive = false
-  updatePainters()
+function highlight(p: Painter) {
+  emit('highlight', p)
 }
 
-function updatePainters() {
-  props.setup.painters = paintersUI.filter((p) => p[1].isActive).map((p) => p[1].painter)
+function dehighlight() {
+  emit('dehighlight')
 }
+
 </script>
 
 <template>
   <div style="margin: 10px">
     <div>Заморозка: </div>
     <div>
-      <input type="button" v-for="t in tilesList" :class="t" :tile="t" @click="toggleFrozen" style="width:30px;height:30px;"/>
+      <input type="button" v-for="t in forzenTilesList" :class="t" :tile="t" @click="toggleFrozen" style="width:30px;height:30px;"/>
     </div>
     <div>Перекрасы: </div>
-    <ColorChange v-for="([key, p], i) in paintersUI" :key="key" :setup="p" 
-      @removeme="removePainter(i)" @tryme="tryColoring(p)" @deactivated="deactivatePainter(i)" @activated="activatePainter(i)"/>
-    <input type="button" value="Add" @click="addPainter" />
+    <PaintersSetup :setup="setup" @paint="tryColoring" @highlight="highlight" @dehighlight="dehighlight"/>
   </div>
 </template>
 

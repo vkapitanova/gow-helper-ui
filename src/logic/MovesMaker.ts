@@ -2,6 +2,7 @@ import { BoardCoordinates, GameBoard } from "./GameBoard";
 import { GameMatch, MatchesFinder, MatchType } from "./MatchesFinder";
 import { ManaColor, Tile, TileType } from "./Tile";
 import { tileFromString } from "../utils/transformers";
+import { Painter } from "./PlayerSetup";
 
 export interface MoveResult {
   steps: Array<StepResult>
@@ -41,8 +42,10 @@ export class MovesMaker {
     return this.calcMove()
   }
 
-  paintOver(from: Tile, to: Tile): MoveResult | string {
-    this.board.transformTiles((t: Tile) => (t.equal(from) ? to : t))
+  paintOver(changes: Array<[Tile, Tile]>): MoveResult | string {
+    for (let [from, to] of changes) {
+      this.board.transformTiles((t: Tile) => (t.equal(from) ? to : t))
+    }
     return this.calcMove()
   }
 
@@ -70,6 +73,7 @@ export class MovesMaker {
       if (matches.length > 0) {
         let blownTiles: Array<[Tile, BoardCoordinates]> = blownCoordinates.map((c) => [this.board.getTile(c), c])
         this.board.removeTiles(matches.map((m) => m.tiles).flat())
+        this.board.removeTiles(blownTiles.map(([t, c]) => c))
 
         res.steps.push({ matches: matches, blown: blownTiles, resultMap: this.board.copy() })
         res.hasMatch = true

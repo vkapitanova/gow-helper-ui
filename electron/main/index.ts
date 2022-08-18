@@ -55,7 +55,7 @@ async function createWindow() {
   } else {
     win.loadURL(url)
     // Open devTool if the app is not packaged
-    // win.webContents.openDevTools()
+    win.webContents.openDevTools()
   }
 
   // Test actively push message to the Electron-Renderer
@@ -69,7 +69,7 @@ async function createWindow() {
     return { action: 'deny' }
   })
 
-  win.setAlwaysOnTop(true)
+  // win.setAlwaysOnTop(true)
 }
 
 app.whenReady().then(createWindow)

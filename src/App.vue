@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import FileUploader from './components/FileUploader.vue'
 import ScreenCapturer from './components/ScreenCapturer.vue'
 import Board from './components/Board.vue'
@@ -21,6 +21,8 @@ function reloadBoard(newList: Array<string>) {
   setup.tilesList.splice(0, len, ...newList)
 }
 
+let baseUrl = ref('http://localhost:5000')
+
 onMounted(() => {
   document.dispatchEvent(new Event('vue-ready'))
 })
@@ -28,8 +30,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <FileUploader @map-reloaded="reloadBoard"/>
-  <ScreenCapturer @map-reloaded="reloadBoard"/>
+  <div>
+    <span>Base url: </span><input type="text" v-model="baseUrl"/>
+  </div>
+  <FileUploader :base-url="baseUrl" @map-reloaded="reloadBoard"/>
+  <ScreenCapturer :base-url="baseUrl" @map-reloaded="reloadBoard"/>
   <Board :tilesList="setup.tilesList" />
 </template>
 

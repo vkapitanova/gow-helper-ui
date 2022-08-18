@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { colorToString } from '../utils/transformers';
-import { MoveAnalysis } from '../logic/BoardAnalyser';
+import { colorToString, tileToString } from '../utils/transformers';
+import { MoveAnalysis, MoveType } from '../logic/BoardAnalyser';
 
 interface Props {
   moveAnalysis: MoveAnalysis
@@ -13,12 +13,31 @@ let firstAddMove = moveAnalysis.move.moveResult.hasAdditionalMove
 let firstHit = moveAnalysis.move.hits > 0
 let passMove = !moveAnalysis.move.moveResult.hasAdditionalMove
 let secondAddMove = moveAnalysis.nextMoveSummary?.additionalMove
+let tilesMove = moveAnalysis.move.moveType == MoveType.MoveTiles
+
+const captionsMap: Map<string, string> = new Map([
+  ['EM', '❌'],
+  ['YE', '🟨'],
+  ['RE', '🟥'],
+  ['GR', '🟩'],
+  ['BL', '🟦'],
+  ['BR', '🟫'],
+  ['VI', '🟪'],
+  ['SK', '💀'],
+  ['RS', '☠️'],
+  ['ANY', '🌈'],
+])
 
 </script>
 
 <template>
   <div class="move-hint">
     <div class="my-move move-container" :class="firstAddMove ? 'addmove' : 'normal'">
+      <div v-if="tilesMove == true" class="tiles-move" style="display: inline-block">🎲</div>
+      <div v-if="tilesMove == false" style="display: inline-block" v-for="c in moveAnalysis.move.tilesChanged!">
+        <div class="color-change-1">{{ captionsMap.get(tileToString(c[0])) }}</div>
+        <div class="color-change-2">{{ captionsMap.get(tileToString(c[1])) }}</div>
+      </div>
       <div class="hit-box" :class="firstHit ? 'hit' : 'no-hit'">{{ firstHit ? '☠︎' : '' }}</div>
       <span v-for="[c, n] in moveAnalysis.move.collectedMana" class="manaresult">
         <div :class="colorToString(c)"></div> x {{n}}
@@ -78,4 +97,18 @@ let secondAddMove = moveAnalysis.nextMoveSummary?.additionalMove
 .move-container.normal {
   border-width: 1px;
 }
+
+.color-change-1 {
+  width: 20px;
+  height: 20px;
+  margin-left: 5px;
+  display: inline-block; 
+}
+.color-change-2 {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  display: inline-block; 
+}
+
 </style>

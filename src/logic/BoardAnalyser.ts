@@ -17,7 +17,7 @@ export interface MoveAnalysis {
 export interface PossibleMove {
   moveType: MoveType
   coords?: [BoardCoordinates, BoardCoordinates]
-  tilesChanged?: [Tile, Tile]
+  tilesChanged?: Array<[Tile, Tile]>
 
   moveResult: MoveResult
   collectedMana: Array<[ManaColor, number]>
@@ -108,20 +108,29 @@ export class BoardAnalyser {
     }
     // look for painters
     for (let painter of setup.painters) {
-      for (let from of painter.from) {
-        let r = this.tryColoring(board, from, painter.to, setup)
-        if (r != null) moves.push(r)  
+      let combinations: Array<Array<[Tile, Tile]>> = [[]]
+      for (let c of painter) {
+        let clone = combinations;
+        combinations = []
+        for (let from of c.from) {
+          if (from == c.to) continue
+          combinations = combinations.concat(clone.map(a => a.concat([[from, c.to]])))
+        }  
+      }
+      for (let c of combinations) {
+        let r = this.tryColoring(board, c, setup)
+        if (r != null) moves.push(r)      
       }
     }
     return moves
   }
 
-  private tryColoring(board: GameBoard, from: Tile, to: Tile, setup: PlayerSetup): PossibleMove | null {
-    let result = new MovesMaker(board.copy(), setup.frozenColors).paintOver(from, to)
+  private tryColoring(board: GameBoard, changes: Array<[Tile, Tile]>, setup: PlayerSetup): PossibleMove | null {
+    let result = new MovesMaker(board.copy(), setup.frozenColors).paintOver(changes)
     let res = this.findMoves(result)
     if (res != null) {
       res.moveType = MoveType.ChangeTileType
-      res.tilesChanged = [from, to]
+      res.tilesChanged = changes
     }
     return res
   }

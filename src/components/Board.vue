@@ -8,7 +8,7 @@ import { BoardAnalyser, MoveAnalysis, MoveType, PossibleMove } from '../logic/Bo
 import PlayerSetupView from './PlayerSetupView.vue'
 import { MovesMaker, StepResult } from '../logic/MovesMaker'
 import { boardToGameBoard, gameBoardToBoard, tileFromString, tileToString } from '../utils/transformers'
-import { PlayerSetup } from '../logic/PlayerSetup'
+import { Painter, PlayerSetup } from '../logic/PlayerSetup'
 import { TileView } from '../models/TileView'
 import SelectTile from './SelectTile.vue'
 import { generateRandomKey } from '../utils/utils'
@@ -105,10 +105,10 @@ function changeTiles(coord1: BoardCoordinates, coord2: BoardCoordinates): MoveRe
   return { message: "move done" }
 }
 
-function reColor(from: Tile, to: Tile) {
+function reColor(p: Painter) {
   saveStateBeforeChange()
-  console.log(from, to)
-  let result = new MovesMaker(boardToGameBoard(board), mySetup.frozenColors).paintOver(from, to)
+  console.log(p)
+  let result = new MovesMaker(boardToGameBoard(board), mySetup.frozenColors).paintOver(p.map((t) => [t.from[0], t.to]))
   if (typeof result === 'string') {
     return { message: result }
   }
@@ -184,6 +184,7 @@ function reloadMapFromList(newList: Array<string>) {
 }
 
 function analysePossibleMoves() {
+  console.log("analysing with setup: ", mySetup)
   let res = new BoardAnalyser(boardToGameBoard(board), mySetup, opponentSetup).analyseBoard()
   console.log(res)
   suggestedMoves.moves.splice(0, suggestedMoves.moves.length, ...res)
@@ -195,7 +196,29 @@ function highlightMove(move: PossibleMove) {
     board[x1][y1].isHighlighted = true
     board[x2][y2].isHighlighted = true
   } else {
-    let [from, to] = move.tilesChanged!
+    for (let change of move.tilesChanged!) {
+      let [from, to] = change
+      for (let i = 0; i < 8; i++) {
+          for (let j = 0; j < 8; j++) {
+            if (board[i][j].tile.matchesWith(from) || board[i][j].tile.matchesWith(to)) {
+              board[i][j].isHighlighted = true
+            }
+          }
+      }
+    }
+    let coords: Array<BoardCoordinates> = move.moveResult.steps[0].matches.flatMap(m => m.tiles)
+    for (let [i, j] of coords) {
+      board[i][j].isMatchHighlighted = true
+    }
+  }
+}
+
+function highlightPaint(p: Painter) {
+  let painter: Array<[Tile, Tile]> = p.map((t) => [t.from[0], t.to])
+  let result = new MovesMaker(boardToGameBoard(board), mySetup.frozenColors).paintOver(painter)
+  if (typeof result === 'string') return
+  for (let change of painter) {
+    let [from, to] = change
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
           if (board[i][j].tile.matchesWith(from) || board[i][j].tile.matchesWith(to)) {
@@ -204,27 +227,23 @@ function highlightMove(move: PossibleMove) {
         }
     }
   }
-}
+  let coords: Array<BoardCoordinates> = result.steps[0].matches.flatMap(m => m.tiles)
+  for (let [i, j] of coords) {
+    board[i][j].isMatchHighlighted = true
+  }
+} 
 
-function removeHighlight(move: PossibleMove) {
-  if (move.moveType == MoveType.MoveTiles) {
-    let [[x1, y1], [x2, y2]] = move.coords!
-    board[x1][y1].isHighlighted = false
-    board[x2][y2].isHighlighted = false
-  } else {
-    let [from, to] = move.tilesChanged!
-    for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          if (board[i][j].tile.matchesWith(from) || board[i][j].tile.matchesWith(to)) {
-            board[i][j].isHighlighted = false
-          }
-        }
+function removeHighlight() {
+  for (let i = 0; i < boardSize; i++) {
+    for (let j = 0; j < boardSize; j++) {
+      board[i][j].isHighlighted = false
+      board[i][j].isMatchHighlighted = false
     }
   }
 }
 
 function animateSuggestedMove(move: MoveAnalysis) {
-  removeHighlight(move.move)
+  removeHighlight()
   saveStateBeforeChange()
   setBoard(gameBoardToBoard(move.move.moveResult.mapAfterMove))
   animateSteps(move.move.moveResult.steps)
@@ -243,8 +262,8 @@ function animateSuggestedMove(move: MoveAnalysis) {
       </div>
       <SelectTile v-if="selectTileView.isActive" @selected="tileSelected" />
       <div id="players-setups" style="display: flex">
-        <PlayerSetupView :setup="mySetup" @paint="reColor" />
-        <PlayerSetupView :setup="opponentSetup" @paint="reColor" />
+        <PlayerSetupView :setup="mySetup" @paint="reColor" @highlight="highlightPaint" @dehighlight="removeHighlight()" />
+        <PlayerSetupView :setup="opponentSetup" @paint="reColor" @highlight="highlightPaint" @dehighlight="removeHighlight()" />
       </div>
       <div style="margin-top: 10px">
         <input type="button" value="roll back" @click="rollBackToPrev"/>
@@ -254,7 +273,7 @@ function animateSuggestedMove(move: MoveAnalysis) {
       <input type="button" value="show moves" @click="analysePossibleMoves">
       <div v-for="(move, i) in suggestedMoves.moves" :key="generateRandomKey()" 
             @mouseover="highlightMove(move.move)" 
-            @mouseleave="removeHighlight(move.move)"
+            @mouseleave="removeHighlight()"
             @click="animateSuggestedMove(move)">
         <MoveHint :move-analysis="move" />
       </div>

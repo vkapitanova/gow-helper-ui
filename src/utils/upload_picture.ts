@@ -1,7 +1,8 @@
 import axios from "axios"
 
-export function uploadPicture(imageData: any, imageType: string, onFinish: (result: any) => void) {
-  axios.put('http://localhost:5000/upload',
+export function uploadPicture(url: string, imageData: any, imageType: string, onFinish: (result: any) => void) {
+  console.log('uploading to: ', url)
+  axios.put(url + '/upload',
     imageData,
     {
         headers: {

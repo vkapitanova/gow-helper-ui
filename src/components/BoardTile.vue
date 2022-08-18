@@ -17,7 +17,7 @@ function tileClicked() {
 </script>
 
 <template>
-  <input class="tile" :class="[viewSetup.tileClass, viewSetup.isSelected ? 'selected' : '', viewSetup.isHighlighted ? 'highlighted' : '', viewSetup.fade ? 'fade' : '']" type="button" @click="tileClicked"/>
+  <input class="tile" :class="[viewSetup.tileClass, viewSetup.isSelected ? 'selected' : '', viewSetup.isHighlighted ? 'highlighted' : '', viewSetup.fade ? 'fade' : '', viewSetup.isMatchHighlighted ? 'match' : '']" type="button" @click="tileClicked"/>
 </template>
 
 <style scoped>
@@ -39,10 +39,13 @@ function tileClicked() {
       /*transition: visibility 0s 2s, opacity 2s linear;*/
   }
   .selected {
-      border: 2px solid white;
+    border: 2px solid white;
   }
   .highlighted {
     opacity: 0.5
+  }
+  .match {
+    border: 5px solid green;
   }
 
 </style>
