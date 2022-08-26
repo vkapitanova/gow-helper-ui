@@ -46,6 +46,7 @@ export class MovesMaker {
     for (let [from, to] of changes) {
       this.board.transformTiles((t: Tile) => (t.equal(from) ? to : t))
     }
+    this.board.removeTiles([])
     return this.calcMove()
   }
 
