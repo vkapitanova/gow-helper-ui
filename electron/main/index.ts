@@ -122,16 +122,26 @@ desktopCapturer.getSources({ types: ['window'] }).then(async sources => {
 
 let followScreen = false
 
+ipcMain.on('get-screen', (event, windowName) => {
+  desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
+    for (const source of sources) {
+      if (source.name == windowName) {
+        win.webContents.send('SET_SCREENSHOT', source.thumbnail.toJPEG(100))
+      }
+    }
+  }) 
+})
+
 ipcMain.on('follow-screen', (event, windowName) => {
   function captureScreen() {
     desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
       for (const source of sources) {
         if (source.name == windowName) {
-          win.webContents.send('SET_SCREENSHOT', source.thumbnail.toJPEG(100))
+          win.webContents.send('SET_REPEATED_SCREENSHOT', source.thumbnail.toJPEG(100))
         }
       }
     }) 
-    if (followScreen) setTimeout(captureScreen, 2000) 
+    if (followScreen) setTimeout(captureScreen, 1000) 
   }
   followScreen = true
   captureScreen()

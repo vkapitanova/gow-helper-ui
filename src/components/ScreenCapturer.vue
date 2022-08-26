@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, onMounted, toRefs, ref } from 'vue';
-import { uploadPicture } from '../utils/upload_picture';
+import { uploadPicture, detectGrid } from '../utils/upload_picture';
 
 const emit = defineEmits(['mapReloaded'])
 
@@ -21,19 +21,34 @@ function onChange(event: Event) {
   selectedWindow = event.target.value
 }
 
+let previousResult: Array<string> | null = null
+let coords: [string, string, string] = ["", "", ""]
+let picture = ref("")
+let pictureActive = ref(false)
+
 function captureScreen() {
   if (isActive.value == true) return
+  previousResult = null
   isActive.value = true
-  electronAPI.selectWindow(selectedWindow)
+  electronAPI.getScreen(selectedWindow)
 }
 
-let previousResult: Array<string> | null = null
-
 function uploadImage() {
-  uploadPicture(baseUrl.value, screenshotBuffer(), 'image/jpeg', (result) => {
+  let [x, y, grid_size] = coords
+  uploadPicture(baseUrl.value, screenshotBuffer(), x, y, grid_size, 'image/jpeg', (result) => {
     if (previousResult == null || (!result.map.includes('UN')) && JSON.stringify(previousResult) !== JSON.stringify(result.map)) {
       emit('mapReloaded', result.map)
       previousResult = result.map
+    }
+  })
+}
+
+function uploadForGrid() {
+  detectGrid(baseUrl.value, screenshotBuffer(), 'image/jpeg', (result) => {
+    if (previousResult == null || (!result.map.includes('UN')) && JSON.stringify(previousResult) !== JSON.stringify(result.map)) {
+      coords = [result.x, result.y, result.grid_size]
+      picture.value = "data:image/png;base64, " + result.grid
+      electronAPI.selectWindow(selectedWindow)
     }
   })
 }
@@ -55,8 +70,10 @@ onMounted(() => {
     <select id="sources-list" @ready="setWindowNames" @change="onChange">
       <option v-for="name in windowNames">{{name}}</option>
     </select>
-    <input id="screen-capture-button" type="button" value="Follow" @click="captureScreen" @newimage="uploadImage"/>
+    <input id="screen-capture-button" type="button" value="Follow" @click="captureScreen" @newimage="uploadImage" @resimage="uploadForGrid"/>
     <input id="screen-capture-button" type="button" value="Pause" @click="pauseFollow"/>
+    <button @click="pictureActive = !pictureActive">{{pictureActive ? "hide board" : "show board" }}</button>
+    <img v-if="pictureActive" :src="picture"/>
   </div>
 </template>
 
