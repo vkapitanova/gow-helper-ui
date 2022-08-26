@@ -136,7 +136,7 @@ export class MatchesFinder {
   }
 
   printMarks() {
-    printArray<Mark>(this.marks, (v: Mark) => v.value.toString())
+    printArray<Mark>(this.marks, (v: Mark) => v.toConsoleString())
   }
 }
 

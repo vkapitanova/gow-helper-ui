@@ -68,6 +68,7 @@ export class GameBoard {
     for (let c of coords) {
       this.removeTile(c)
     }
+    // this.printBoard()
     // drop tiles
     for (let i = 1; i < boardSize; i++) {
       for (let j = 0; j < boardSize; j++) {

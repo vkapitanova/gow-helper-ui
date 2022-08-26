@@ -72,8 +72,9 @@ export class MovesMaker {
       [matches, blownCoordinates] = new MatchesFinder(this.board).findMatches()
       if (matches.length > 0) {
         let blownTiles: Array<[Tile, BoardCoordinates]> = blownCoordinates.map((c) => [this.board.getTile(c), c])
-        this.board.removeTiles(matches.map((m) => m.tiles).flat())
-        this.board.removeTiles(blownTiles.map(([t, c]) => c))
+        let matchedTilesCoords = matches.map((m) => m.tiles).flat()
+        let blownTilesCoords = blownTiles.map(([t, c]) => c)
+        this.board.removeTiles(matchedTilesCoords.concat(blownTilesCoords))
 
         res.steps.push({ matches: matches, blown: blownTiles, resultMap: this.board.copy() })
         res.hasMatch = true
