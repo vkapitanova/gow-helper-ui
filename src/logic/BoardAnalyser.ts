@@ -61,11 +61,12 @@ export class BoardAnalyser {
       }
       res.push(anMove)
     }
-    this.sortSuggestedMoves(res)
+    let mainColors = this.myCards.filter(c => c.isMain).map(c => c.mana).flat()
+    this.sortSuggestedMoves(res, new Set(mainColors))
     return res
   }
 
-  private sortSuggestedMoves(moves: Array<MoveAnalysis>) {
+  private sortSuggestedMoves(moves: Array<MoveAnalysis>, mainColors: Set<ManaColor>) {
     moves.sort((m1, m2) => {
       // options with additional move go first
       if (m1.move.moveResult.hasAdditionalMove != m2.move.moveResult.hasAdditionalMove) {
@@ -92,8 +93,10 @@ export class BoardAnalyser {
       if (passMove && m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) {
         return 1
       }
-      // rest sort by collected mana
-      return m2.move.totalManaCollected - m1.move.totalManaCollected
+      // rest sort by collected mana considering main mana cards
+      let m1Mana = m1.move.collectedMana.map(([mana, amount]) => mainColors.has(mana) ? amount * 5 : amount ).reduce((a, b) => a + b)
+      let m2Mana = m2.move.collectedMana.map(([mana, amount]) => mainColors.has(mana) ? amount * 5 : amount ).reduce((a, b) => a + b)
+      return m2Mana - m1Mana
     })
   }
   

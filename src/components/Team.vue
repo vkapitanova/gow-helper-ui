@@ -60,6 +60,11 @@ function toggleCardFrozen(i: number) {
   emit('cardChanged')
 }
 
+function toggleMain(i: number) {
+  cards[i].isMain = !cards[i].isMain
+  emit('cardChanged')
+}
+
 function tryColoring(i: number) {
   emit('paint', cards[i])
 }
@@ -98,7 +103,7 @@ function removeHighlight() {
       <option v-for="t in teams.keys()">{{ t }}</option>
     </select>
   </div>
-  <div class="card-container" v-for="(c, i) in cards" :class="[c.hasFullMana ? 'active' : 'inactive', c.isFrosen ? 'frozen' : '', c.isHighlighted ? 'highlighted' : '']"
+  <div class="card-container" v-for="(c, i) in cards" :class="[c.hasFullMana ? 'active' : 'inactive', c.isFrosen ? 'frozen' : '', c.isHighlighted ? 'highlighted' : '', c.isMain ? 'main' : '']"
     @mouseover="highlightPainter(i)" 
     @mouseleave="removeHighlight()">
     <div>
@@ -106,6 +111,9 @@ function removeHighlight() {
         <option v-for="pc in sortedCards" :selected="pc.name == c.name">{{ pc.name }}</option>
       </select>
       <div v-for="m in c.mana" class="mana-container" :class="ManaColor[m]"></div>
+    </div>
+    <div>
+      <input type="button" :value="c.isMain ? '🔕' : '🔔'" @click="toggleMain(i)" style="margin: 2px"/>
     </div>
     <div style="display: flex; margin-top: 3px;">
       <div v-for="([from, to], j) in c.transformations" style="margin: 2px">
@@ -146,7 +154,10 @@ function removeHighlight() {
   background-color: lightblue;
 }
 .card-container.highlighted {
-  border-color: green;
   background-color: lightgreen;
+}
+
+.card-container.main {
+  border-color: red;
 }
 </style>

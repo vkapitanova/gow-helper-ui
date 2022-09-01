@@ -8,6 +8,7 @@ export class Card {
   isFrosen: boolean = false
   hasFullMana: boolean = false
   isHighlighted: boolean = false
+  isMain: boolean = false
 
   constructor(name: string, mana: Array<ManaColor>, transformations: Array<[Array<Tile>, Tile]>, hasAdvantage: boolean = false) {
     this.name = name
