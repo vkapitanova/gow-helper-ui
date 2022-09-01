@@ -18,6 +18,7 @@ export interface PossibleMove {
   moveType: MoveType
   coords?: [BoardCoordinates, BoardCoordinates]
   tilesChanged?: Array<[Tile, Tile]>
+  cardPlayed?: Card
 
   moveResult: MoveResult
   collectedMana: Array<[ManaColor, number]>
@@ -67,28 +68,30 @@ export class BoardAnalyser {
   private sortSuggestedMoves(moves: Array<MoveAnalysis>) {
     moves.sort((m1, m2) => {
       // options with additional move go first
-      if (m1.move.moveResult.hasAdditionalMove != m2.move.moveResult.hasAdditionalMove) 
+      if (m1.move.moveResult.hasAdditionalMove != m2.move.moveResult.hasAdditionalMove) {
         return m1.move.moveResult.hasAdditionalMove ? -1 : 1
-      // in no moves after this one - sort last
-      if (!m1.nextMoveSummary) return 1
-      if (!m2.nextMoveSummary) return -1
+      }
 
       let passMove = !m1.move.moveResult.hasAdditionalMove
       // if opponent has additional move - sort last
       if (passMove) {
         if (m1.nextMoveSummary!.additionalMove != m2.nextMoveSummary!.additionalMove)
           return m1.nextMoveSummary!.additionalMove ? 1 : -1
-        if (m1.nextMoveSummary.hit) return 1
+        if (m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) return 1
       // if there is my additional move after this one - sort first
       } else {
         if (m1.nextMoveSummary!.additionalMove != m2.nextMoveSummary!.additionalMove)
           return m1.nextMoveSummary!.additionalMove ? -1 : 1
-        if (m1.nextMoveSummary.hit) return -1
+        if (m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) return -1
       }
       // if there's a hit - sort first
-      if (m1.move.hits > 0 || !passMove && m1.nextMoveSummary.hit) return -1
+      if (m1.move.hits > m2.move.hits || !passMove && m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) {
+        return -1
+      }
       // if there's opponent hit - sort last
-      if (passMove && m1.nextMoveSummary.hit) return 1
+      if (passMove && m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) {
+        return 1
+      }
       // rest sort by collected mana
       return m2.move.totalManaCollected - m1.move.totalManaCollected
     })
@@ -120,7 +123,10 @@ export class BoardAnalyser {
       }
       for (let c of combinations) {
         let r = this.tryColoring(board, c, cards)
-        if (r != null) moves.push(r)      
+        if (r != null) {
+          r.cardPlayed = card
+          moves.push(r)      
+        }
       }
     }
     return moves

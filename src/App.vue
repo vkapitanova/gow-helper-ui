@@ -6,6 +6,7 @@ import FileUploader from './components/FileUploader.vue'
 import ScreenCapturer from './components/ScreenCapturer.vue'
 import Board from './components/Board.vue'
 import "./assets/css/tiles.css"
+import "./assets/css/colors.css"
 
 let setup = reactive({tilesList: ['basic_red', 'basic_yellow', 'basic_yellow', 'basic_blue', 'basic_green', 'basic_yellow', 'basic_red', 'block',
                       'basic_yellow', 'basic_red', 'basic_red', 'basic_green', 'basic_violet', 'basic_brown', 'skull_normal', 'skull_rock',

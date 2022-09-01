@@ -37,8 +37,8 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(ROOT_PATH.public, 'favicon.ico'),
-    width: 900,
-    height: 800,
+    width: 920,
+    height: 1200,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -48,6 +48,8 @@ async function createWindow() {
       // contextIsolation: false,
     },
   })
+
+  win.setPosition(0, 0)
 
   if (app.isPackaged) {
     win.loadFile(indexHtml)

@@ -7,6 +7,7 @@ export class Card {
   transformations: Array<[Array<Tile>, Tile]>
   isFrosen: boolean = false
   hasFullMana: boolean = false
+  isHighlighted: boolean = false
 
   constructor(name: string, mana: Array<ManaColor>, transformations: Array<[Array<Tile>, Tile]>, hasAdvantage: boolean = false) {
     this.name = name

@@ -3,7 +3,7 @@ import { Tile, ManaColor } from '../models/Tile';
 import { Card, getCardByName, teams, preDefinedCards } from '../models/Cards';
 import { tileToString, tileFromString } from '../utils/transformers'
 
-const emit = defineEmits(['paint', 'highlight', 'dehighlight'])
+const emit = defineEmits(['paint', 'highlight', 'dehighlight', 'cardChanged'])
 
 interface TeamSetup {
   cards: Array<Card>
@@ -47,14 +47,17 @@ function selectTeam(event: Event) {
   for (let i in team) {
     cards[i] = getCardByName(team[i]).copy()
   }
+  emit('cardChanged')
 }
 
 function toggleCardFullMana(i: number) {
   cards[i].hasFullMana = !cards[i].hasFullMana
+  emit('cardChanged')
 }
 
 function toggleCardFrozen(i: number) {
   cards[i].isFrosen = !cards[i].isFrosen
+  emit('cardChanged')
 }
 
 function tryColoring(i: number) {
@@ -64,16 +67,19 @@ function tryColoring(i: number) {
 function changeColorFrom(event: Event, i: number, j: number) {
   let target = event.target as HTMLSelectElement
   cards[i].transformations[j][0] = tilesFromString(target.value)
+  emit('cardChanged')
 }
 
 function changeColorTo(event: Event, i: number, j: number) {
   let target = event.target as HTMLSelectElement
   cards[i].transformations[j][1] = tileFromString(target.value)
+  emit('cardChanged')
 }
 
 function changeCard(event: Event, i: number) {
   let target = event.target as HTMLSelectElement
   cards[i] = getCardByName(target.value).copy()
+  emit('cardChanged')
 }
 
 function highlightPainter(i: number) {
@@ -92,7 +98,7 @@ function removeHighlight() {
       <option v-for="t in teams.keys()">{{ t }}</option>
     </select>
   </div>
-  <div class="card-container" v-for="(c, i) in cards" :class="[c.hasFullMana ? 'active' : 'inactive', c.isFrosen ? 'frozen' : '']"
+  <div class="card-container" v-for="(c, i) in cards" :class="[c.hasFullMana ? 'active' : 'inactive', c.isFrosen ? 'frozen' : '', c.isHighlighted ? 'highlighted' : '']"
     @mouseover="highlightPainter(i)" 
     @mouseleave="removeHighlight()">
     <div>
@@ -139,22 +145,8 @@ function removeHighlight() {
 .frozen {
   background-color: lightblue;
 }
-.Yellow {
-  background-color: yellow;
-}
-.Blue {
-  background-color: blue;
-}
-.Red {
-  background-color: red;
-}
-.Violet {
-  background-color: violet;
-}
-.Brown {
-  background-color: brown;
-}
-.Green {
-  background-color: green;
+.card-container.highlighted {
+  border-color: green;
+  background-color: lightgreen;
 }
 </style>
