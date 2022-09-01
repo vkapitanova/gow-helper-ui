@@ -1,6 +1,7 @@
 
 export enum TileType {
   Color,
+  GreatColor,
   Skull,
   Empty,
   Block,
@@ -36,6 +37,7 @@ export class Tile {
   static brown: Tile = new Tile(TileType.Color, ManaColor.Brown)
   static skull: Tile = new Tile(TileType.Skull, undefined, SkullType.Normal)
   static rockSkull: Tile = new Tile(TileType.Skull, undefined, SkullType.Rock)
+  static allColors: Array<Tile> = [Tile.yellow, Tile.violet, Tile.red, Tile.green, Tile.blue, Tile.brown]
 
   canMove(): boolean {
     return this.type != TileType.Block
@@ -59,7 +61,7 @@ export class Tile {
   }
 
   matchesWith(t: Tile): boolean {
-    if (this.type == TileType.Color && t.type == TileType.Color) return this.color == t.color
+    if ((this.type == TileType.Color || this.type == TileType.GreatColor) && (t.type == TileType.Color || t.type == TileType.GreatColor)) return this.color == t.color
     if (this.type == TileType.Skull && t.type == TileType.Skull) return true
     return false
   }
@@ -69,10 +71,14 @@ export class Tile {
   }
 
   blows(): boolean {
-    return this.type == TileType.Skull && this.scullType == SkullType.Rock
+    return this.type == TileType.Skull && this.scullType == SkullType.Rock || this.type == TileType.GreatColor
   }
 
   equal(t: Tile): boolean {
-    return this.type == t.type && this.color == t.color
+    return this.sameType(t.type) && this.color == t.color
+  }
+
+  sameType(t: TileType): boolean {
+    return this.type == t || ((this.type == TileType.Color || this.type == TileType.GreatColor) && (t == TileType.Color || t == TileType.GreatColor))
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Tile } from '../logic/Tile';
+import { Tile } from '../models/Tile'
 import { tileToString } from '../utils/transformers'
 
 const emit = defineEmits(['selected'])

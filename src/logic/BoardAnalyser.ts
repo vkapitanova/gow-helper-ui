@@ -1,8 +1,8 @@
 import { BoardCoordinates, boardSize, GameBoard } from "./GameBoard"
 import { MoveResult, MovesMaker, StepResult } from "./MovesMaker"
-import { ManaColor, Tile, TileType } from "./Tile"
-import { PlayerSetup } from './PlayerSetup'
+import { ManaColor, Tile, TileType } from "../models/Tile"
 import { MatchType } from "./MatchesFinder"
+import { Card, getFrozenColors } from "../models/Cards"
 
 export enum MoveType {
   MoveTiles,
@@ -32,22 +32,21 @@ export interface MoveSummary {
 
 export class BoardAnalyser {
   board: GameBoard
-  mySetup: PlayerSetup
-  opponentSetup: PlayerSetup
+  myCards: Array<Card>
+  opponentCards: Array<Card>
 
-  constructor(board: GameBoard, mySetup: PlayerSetup, opponetSetup: PlayerSetup) {
+  constructor(board: GameBoard, myCards: Array<Card>, opponentCards: Array<Card>) {
     this.board = board
-    this.mySetup = mySetup
-    this.opponentSetup = opponetSetup
+    this.myCards = myCards
+    this.opponentCards = opponentCards
   }
 
   analyseBoard(): Array<MoveAnalysis> {
     let res: Array<MoveAnalysis> = []
-    // console.log("analysing moves", this.mySetup)
-    let possibleMoves = this.collectPossibleMovesForSetup(this.board, this.mySetup)
+    let possibleMoves = this.collectPossibleMovesForSetup(this.board, this.myCards)
     for (let move of possibleMoves) {
       let anMove: MoveAnalysis = {move: move, nextMoveSummary: null}
-      let nextMoveSetup = move.moveResult.hasAdditionalMove ? this.mySetup : this.opponentSetup
+      let nextMoveSetup = move.moveResult.hasAdditionalMove ? this.myCards : this.opponentCards
       let nextMoves = this.collectPossibleMovesForSetup(move.moveResult.resultMap, nextMoveSetup)
       if (nextMoves.length > 0) {
         anMove.nextMoveSummary = {
@@ -95,38 +94,40 @@ export class BoardAnalyser {
     })
   }
   
-  private collectPossibleMovesForSetup(board: GameBoard, setup: PlayerSetup): Array<PossibleMove> {
+  private collectPossibleMovesForSetup(board: GameBoard, cards: Array<Card>): Array<PossibleMove> {
     // look for tiles change
     let moves: Array<PossibleMove> = []
     for (let i = 0; i < boardSize; i++) {
       for (let j = 1; j < boardSize; j++) {
-          let m1 = this.tryTilesChange([i, j], [i, j-1], board, setup)
+          let m1 = this.tryTilesChange([i, j], [i, j-1], board, cards)
           if (m1 != null) moves.push(m1)
-          let m2 = this.tryTilesChange([j, i], [j-1, i], board, setup)
+          let m2 = this.tryTilesChange([j, i], [j-1, i], board, cards)
           if (m2 != null) moves.push(m2)
       }
     }
     // look for painters
-    for (let painter of setup.painters) {
+    for (let card of cards) {
+      if (!card.hasFullMana) continue
       let combinations: Array<Array<[Tile, Tile]>> = [[]]
-      for (let c of painter) {
+      for (let t of card.transformations) {
         let clone = combinations;
+        let [fromList, to] = t
         combinations = []
-        for (let from of c.from) {
-          if (from == c.to) continue
-          combinations = combinations.concat(clone.map(a => a.concat([[from, c.to]])))
+        for (let from of fromList) {
+          if (from == to) continue
+          combinations = combinations.concat(clone.map(a => a.concat([[from, to]])))
         }  
       }
       for (let c of combinations) {
-        let r = this.tryColoring(board, c, setup)
+        let r = this.tryColoring(board, c, cards)
         if (r != null) moves.push(r)      
       }
     }
     return moves
   }
 
-  private tryColoring(board: GameBoard, changes: Array<[Tile, Tile]>, setup: PlayerSetup): PossibleMove | null {
-    let result = new MovesMaker(board.copy(), setup.frozenColors).paintOver(changes)
+  private tryColoring(board: GameBoard, changes: Array<[Tile, Tile]>, cards: Array<Card>): PossibleMove | null {
+    let result = new MovesMaker(board.copy(), getFrozenColors(cards), cards[0].isFrosen).paintOver(changes)
     let res = this.findMoves(result)
     if (res != null) {
       res.moveType = MoveType.ChangeTileType
@@ -135,8 +136,8 @@ export class BoardAnalyser {
     return res
   }
   
-  private tryTilesChange(c1: BoardCoordinates, c2: BoardCoordinates, board: GameBoard, setup: PlayerSetup): PossibleMove | null {
-    let result = new MovesMaker(board.copy(), setup.frozenColors).moveTiles(c1, c2)
+  private tryTilesChange(c1: BoardCoordinates, c2: BoardCoordinates, board: GameBoard, cards: Array<Card>): PossibleMove | null {
+    let result = new MovesMaker(board.copy(), getFrozenColors(cards), cards[0].isFrosen).moveTiles(c1, c2)
     let res = this.findMoves(result)
     if (res != null) {
       res.moveType = MoveType.MoveTiles

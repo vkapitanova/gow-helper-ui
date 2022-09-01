@@ -1,21 +1,19 @@
-import { TileView } from "../models/TileView"
-import { GameBoard } from "../logic/GameBoard"
-import { Tile, ManaColor, SkullType, TileType } from "../logic/Tile"
+import { Tile, ManaColor, SkullType, TileType } from "../models/Tile"
 
 export function tileToString(t: Tile): string {
-  if (t.type == TileType.Unknown) return "UN"
-  if (t.type == TileType.Skull) return t.scullType == SkullType.Normal ?  "SK" : "RS"
-  if (t.type == TileType.Block) return "BK"
-  if (t.type == TileType.Garg) return "GG"
-  if (t.type == TileType.Empty) return "EM"
+  if (t.type == TileType.Unknown) return "unknown"
+  if (t.type == TileType.Skull) return t.scullType == SkullType.Normal ?  "skull_normal" : "skull_rock"
+  if (t.type == TileType.Block) return "block"
+  if (t.type == TileType.Garg) return "gargoyle"
+  if (t.type == TileType.Empty) return "empty"
   switch (t.color) {
-    case ManaColor.Red: return "RE"
-    case ManaColor.Blue: return "BL"
-    case ManaColor.Green: return "GR"
-    case ManaColor.Brown: return "BR"
-    case ManaColor.Yellow: return "YE"
-    case ManaColor.Violet: return "VI"
-    default: return "UN"
+    case ManaColor.Red: return t.type == TileType.GreatColor ? "great_red" : "basic_red"
+    case ManaColor.Blue: return t.type == TileType.GreatColor ? "great_blue" : "basic_blue"
+    case ManaColor.Green: return t.type == TileType.GreatColor ? "great_green" : "basic_green"
+    case ManaColor.Brown: return t.type == TileType.GreatColor ? "great_brown" : "basic_brown"
+    case ManaColor.Yellow: return t.type == TileType.GreatColor ? "great_yellow" : "basic_yellow"
+    case ManaColor.Violet: return t.type == TileType.GreatColor ? "great_violet" : "basic_violet"
+    default: return "unknown"
   }
 }
 
@@ -24,17 +22,23 @@ export function tileFromString(value: string): Tile {
   let color = undefined
   let skullType = undefined
   switch (value) {
-    case 'RE': { type = TileType.Color; color = ManaColor.Red; break }
-    case 'GR': { type = TileType.Color; color = ManaColor.Green; break }
-    case 'BL': { type = TileType.Color; color = ManaColor.Blue; break }
-    case 'BR': { type = TileType.Color; color = ManaColor.Brown; break }
-    case 'YE': { type = TileType.Color; color = ManaColor.Yellow; break }
-    case 'VI': { type = TileType.Color; color = ManaColor.Violet; break }
-    case 'SK': { type = TileType.Skull; skullType = SkullType.Normal; break }
-    case 'RS': { type = TileType.Skull; skullType = SkullType.Rock; break }
-    case 'BK': { type = TileType.Block; break }
-    case 'GG': { type = TileType.Garg; break }
-    case 'EM': { type = TileType.Empty; break }
+    case 'basic_red': { type = TileType.Color; color = ManaColor.Red; break }
+    case 'basic_green': { type = TileType.Color; color = ManaColor.Green; break }
+    case 'basic_blue': { type = TileType.Color; color = ManaColor.Blue; break }
+    case 'basic_brown': { type = TileType.Color; color = ManaColor.Brown; break }
+    case 'basic_yellow': { type = TileType.Color; color = ManaColor.Yellow; break }
+    case 'basic_violet': { type = TileType.Color; color = ManaColor.Violet; break }
+    case 'great_red': { type = TileType.GreatColor; color = ManaColor.Red; break }
+    case 'great_green': { type = TileType.GreatColor; color = ManaColor.Green; break }
+    case 'great_blue': { type = TileType.GreatColor; color = ManaColor.Blue; break }
+    case 'great_brown': { type = TileType.GreatColor; color = ManaColor.Brown; break }
+    case 'great_yellow': { type = TileType.GreatColor; color = ManaColor.Yellow; break }
+    case 'great_violet': { type = TileType.GreatColor; color = ManaColor.Violet; break }
+    case 'skull_normal': { type = TileType.Skull; skullType = SkullType.Normal; break }
+    case 'skull_rock': { type = TileType.Skull; skullType = SkullType.Rock; break }
+    case 'block': { type = TileType.Block; break }
+    case 'gargoyle': { type = TileType.Garg; break }
+    case 'empty': { type = TileType.Empty; break }
     default: { type = TileType.Unknown }
   }
   return new Tile(type, color, skullType)
@@ -44,11 +48,3 @@ export function colorToString(c: ManaColor): string {
   return tileToString(new Tile(TileType.Color, c))
 }
 
-export function boardToGameBoard(b: Array<Array<TileView>>): GameBoard {
-  let tilesBoard = b.map((line) => line.map((elem) => tileFromString(elem.tileClass)))
-  return new GameBoard().withBoard(tilesBoard)
-}
-
-export function gameBoardToBoard(b: GameBoard): Array<Array<TileView>> {
-  return b.board.map((line) => line.map((elem) => new TileView(elem)))
-}

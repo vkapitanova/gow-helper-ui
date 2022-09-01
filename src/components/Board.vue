@@ -2,16 +2,16 @@
 import { reactive, ref, watch } from 'vue'
 import { BoardCoordinates, boardSize, GameBoard } from '../logic/GameBoard'
 import MoveHint from './MoveHint.vue'
-import { Tile } from '../logic/Tile'
+import { Tile } from '../models/Tile'
 import BoardTile from './BoardTile.vue'
 import { BoardAnalyser, MoveAnalysis, MoveType, PossibleMove } from '../logic/BoardAnalyser'
-import PlayerSetupView from './PlayerSetupView.vue'
+import Team from './Team.vue'
 import { MovesMaker, StepResult } from '../logic/MovesMaker'
-import { boardToGameBoard, gameBoardToBoard, tileFromString, tileToString } from '../utils/transformers'
-import { Painter, PlayerSetup } from '../logic/PlayerSetup'
+import { tileFromString, tileToString } from '../utils/transformers'
 import { TileView } from '../models/TileView'
 import SelectTile from './SelectTile.vue'
 import { generateRandomKey } from '../utils/utils'
+import { Card, getFrozenColors } from '../models/Cards'
 
 export interface BoardViewConfig {
   tilesList: Array<string>
@@ -28,14 +28,8 @@ interface SuggestedMoves {
   moves: Array<MoveAnalysis>
 }
 let suggestedMoves: SuggestedMoves = reactive({moves: []})
-let mySetup: PlayerSetup = reactive({
-  painters: [],
-  frozenColors: new Set<string>()
-})
-let opponentSetup: PlayerSetup = reactive({
-  painters: [],
-  frozenColors: new Set<string>()
-})
+let myCards: Array<Card> = reactive([])
+let opponentCards: Array<Card> = reactive([])
 
 for (let i = 0; i < boardSize; i++) {
   board[i] = []
@@ -88,7 +82,7 @@ interface MoveResponse {
 
 function changeTiles(coord1: BoardCoordinates, coord2: BoardCoordinates): MoveResponse {
   saveStateBeforeChange()
-  let result = new MovesMaker(boardToGameBoard(board), mySetup.frozenColors).moveTiles(coord1, coord2)
+  let result = new MovesMaker(boardToGameBoard(board), getFrozenColors(myCards)).moveTiles(coord1, coord2)
   console.log(result)
   if (typeof result === 'string') {
     return { message: result }
@@ -105,10 +99,10 @@ function changeTiles(coord1: BoardCoordinates, coord2: BoardCoordinates): MoveRe
   return { message: "move done" }
 }
 
-function reColor(p: Painter) {
+function reColor(c: Card) {
   saveStateBeforeChange()
-  console.log(p)
-  let result = new MovesMaker(boardToGameBoard(board), mySetup.frozenColors).paintOver(p.map((t) => [t.from[0], t.to]))
+  console.log(c)
+  let result = new MovesMaker(boardToGameBoard(board), getFrozenColors(myCards)).paintOver(c.transformations.map(([from, to]) => [from[0], to]))
   if (typeof result === 'string') {
     return { message: result }
   }
@@ -164,6 +158,15 @@ function rollBackToPrev() {
   prevMap = []
 }
 
+function boardToGameBoard(b: Array<Array<TileView>>): GameBoard {
+  let tilesBoard = b.map((line) => line.map((elem) => tileFromString(elem.tileClass)))
+  return new GameBoard().withBoard(tilesBoard)
+}
+
+function gameBoardToBoard(b: GameBoard): Array<Array<TileView>> {
+  return b.board.map((line) => line.map((elem) => new TileView(elem)))
+}
+
 function setBoard(newMap: BoardView) {
   for (let i = 0; i < boardSize; i++) {
       for (let j = 0; j < boardSize; j++) {
@@ -184,8 +187,8 @@ function reloadMapFromList(newList: Array<string>) {
 }
 
 function analysePossibleMoves() {
-  console.log("analysing with setup: ", mySetup)
-  let res = new BoardAnalyser(boardToGameBoard(board), mySetup, opponentSetup).analyseBoard()
+  console.log("analysing with setup: ", myCards)
+  let res = new BoardAnalyser(boardToGameBoard(board), myCards, opponentCards).analyseBoard()
   console.log(res)
   suggestedMoves.moves.splice(0, suggestedMoves.moves.length, ...res)
 }
@@ -206,18 +209,21 @@ function highlightMove(move: PossibleMove) {
           }
       }
     }
-    let coords: Array<BoardCoordinates> = move.moveResult.steps[0].matches.flatMap(m => m.tiles)
-    for (let [i, j] of coords) {
-      board[i][j].isMatchHighlighted = true
+    if (move.moveResult.steps.length > 0) {
+      let coords: Array<BoardCoordinates> = move.moveResult.steps[0].matches.flatMap(m => m.tiles)
+      for (let [i, j] of coords) {
+        board[i][j].isMatchHighlighted = true
+      }
     }
   }
 }
 
-function highlightPaint(p: Painter) {
-  let painter: Array<[Tile, Tile]> = p.map((t) => [t.from[0], t.to])
-  let result = new MovesMaker(boardToGameBoard(board), mySetup.frozenColors).paintOver(painter)
+function highlightPaint(c: Card) {
+  if (c.transformations.length == 0) return
+  let transformations: Array<[Tile, Tile]> = c.transformations.map(([from, to]) => [from[0], to])
+  let result = new MovesMaker(boardToGameBoard(board), getFrozenColors(myCards)).paintOver(transformations)
   if (typeof result === 'string') return
-  for (let change of painter) {
+  for (let change of transformations) {
     let [from, to] = change
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
@@ -227,9 +233,11 @@ function highlightPaint(p: Painter) {
         }
     }
   }
-  let coords: Array<BoardCoordinates> = result.steps[0].matches.flatMap(m => m.tiles)
-  for (let [i, j] of coords) {
-    board[i][j].isMatchHighlighted = true
+  if (result.steps.length > 0) {
+    let coords: Array<BoardCoordinates> = result.steps[0].matches.flatMap(m => m.tiles)
+    for (let [i, j] of coords) {
+      board[i][j].isMatchHighlighted = true
+    }
   }
 } 
 
@@ -255,21 +263,27 @@ function animateSuggestedMove(move: MoveAnalysis) {
   <div id="move-message">
     Message: {{ moveMessage }}
   </div>
-  <div id="gow-grid" style="margin-top: 20px; display: flex">
+  <div id="gow-grid" style="margin-top: 20px">
     <div>
-      <div v-for="(line, i) in board" class="no-margin">
-          <BoardTile v-for="(el, j) in line" :setup="board[i][j]" :key="board[i][j].key" @clicked="ballClicked(i, j)"/>
-      </div>
-      <SelectTile v-if="selectTileView.isActive" @selected="tileSelected" />
-      <div id="players-setups" style="display: flex">
-        <PlayerSetupView :setup="mySetup" @paint="reColor" @highlight="highlightPaint" @dehighlight="removeHighlight()" />
-        <PlayerSetupView :setup="opponentSetup" @paint="reColor" @highlight="highlightPaint" @dehighlight="removeHighlight()" />
+      <div id="full-board" style="display: flex">
+        <div>
+          <Team :cards="myCards" @paint="reColor" @highlight="highlightPaint" @dehighlight="removeHighlight()" />
+        </div>
+        <div>
+          <div v-for="(line, i) in board" class="no-margin">
+            <BoardTile v-for="(el, j) in line" :setup="board[i][j]" :key="board[i][j].key" @clicked="ballClicked(i, j)"/>
+          </div>
+          <SelectTile v-if="selectTileView.isActive" @selected="tileSelected" />
+        </div>
+        <div>
+          <Team :cards="opponentCards" @paint="reColor" @highlight="highlightPaint" @dehighlight="removeHighlight()" />
+        </div>
       </div>
       <div style="margin-top: 10px">
         <input type="button" value="roll back" @click="rollBackToPrev"/>
       </div>
     </div>
-    <div id="moves-hint" style="margin-left: 10px">
+    <div id="moves-hint" style="margin-top: 10px">
       <input type="button" value="show moves" @click="analysePossibleMoves">
       <div v-for="(move, i) in suggestedMoves.moves" :key="generateRandomKey()" 
             @mouseover="highlightMove(move.move)" 

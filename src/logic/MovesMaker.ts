@@ -1,8 +1,6 @@
 import { BoardCoordinates, GameBoard } from "./GameBoard";
 import { GameMatch, MatchesFinder, MatchType } from "./MatchesFinder";
-import { ManaColor, Tile, TileType } from "./Tile";
-import { tileFromString } from "../utils/transformers";
-import { Painter } from "./PlayerSetup";
+import { ManaColor, Tile, TileType } from "../models/Tile";
 
 export interface MoveResult {
   steps: Array<StepResult>
@@ -23,15 +21,10 @@ export class MovesMaker {
   frozenColors: Set<ManaColor> = new Set<ManaColor>()
   frozenHit: boolean = false
 
-  constructor(board: GameBoard, frozenColors: Set<string> = new Set<string>()) {
+  constructor(board: GameBoard, frozenColors: Set<ManaColor> = new Set<ManaColor>(), frozenHit: boolean = false) {
     this.board = board.copy()
-    for (let c of frozenColors) {
-      let tile = tileFromString(c)
-      if (tile.color != null) {
-        this.frozenColors.add(tileFromString(c).color!)
-      }
-      if (tile.type == TileType.Skull) this.frozenHit = true
-    }
+    this.frozenColors = frozenColors
+    this.frozenHit = frozenHit
   }
 
   moveTiles(c1: BoardCoordinates, c2: BoardCoordinates): MoveResult | string {

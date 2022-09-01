@@ -7,21 +7,21 @@ import ScreenCapturer from './components/ScreenCapturer.vue'
 import Board from './components/Board.vue'
 import "./assets/css/tiles.css"
 
-let setup = reactive({tilesList: ['RE', 'YE', 'YE', 'BL', 'GR', 'YE', 'RE', 'BK',
-                      'YE', 'RE', 'RE', 'GR', 'VI', 'BR', 'SK', 'RS',
-                      'RE', 'YE', 'GG', 'RE', 'YE', 'BR', 'YE', 'YE',
-                      'RE', 'RS', 'RS', 'YE', 'RE', 'YE', 'BL', 'YE',
-                      'YE', 'GR', 'VI', 'RS', 'GR', 'YE', 'BL', 'RE',
-                      'RE', 'RS', 'YE', 'GR', 'SK', 'GR', 'GR', 'YE',
-                      'YE', 'GR', 'VI', 'SK', 'GR', 'YE', 'BL', 'GR',
-                      'YE', 'GR', 'VI', 'YE', 'GR', 'YE', 'BL', 'YE']})
+let setup = reactive({tilesList: ['basic_red', 'basic_yellow', 'basic_yellow', 'basic_blue', 'basic_green', 'basic_yellow', 'basic_red', 'block',
+                      'basic_yellow', 'basic_red', 'basic_red', 'basic_green', 'basic_violet', 'basic_brown', 'skull_normal', 'skull_rock',
+                      'basic_red', 'basic_yellow', 'gargoyle', 'basic_red', 'basic_yellow', 'basic_brown', 'basic_yellow', 'basic_yellow',
+                      'basic_red', 'skull_rock', 'skull_rock', 'basic_yellow', 'basic_red', 'basic_yellow', 'basic_blue', 'basic_yellow',
+                      'basic_yellow', 'basic_green', 'basic_violet', 'skull_rock', 'basic_green', 'basic_yellow', 'basic_blue', 'basic_red',
+                      'basic_red', 'skull_rock', 'basic_yellow', 'basic_green', 'skull_normal', 'basic_green', 'basic_green', 'basic_yellow',
+                      'basic_yellow', 'basic_green', 'basic_violet', 'skull_rock', 'basic_yellow', 'basic_yellow', 'basic_blue', 'basic_green',
+                      'basic_yellow', 'basic_green', 'basic_violet', 'basic_yellow', 'basic_green', 'basic_yellow', 'basic_blue', 'basic_yellow']})
 
 function reloadBoard(newList: Array<string>) {
   let len = setup.tilesList.length
   setup.tilesList.splice(0, len, ...newList)
 }
 
-let baseUrl = ref('http://localhost:5000')
+let baseUrl = ref('https://qp4qz4wqea.execute-api.eu-north-1.amazonaws.com/test')
 
 onMounted(() => {
   document.dispatchEvent(new Event('vue-ready'))

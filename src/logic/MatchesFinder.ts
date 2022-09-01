@@ -1,5 +1,5 @@
 import { GameBoard, boardSize, BoardCoordinates } from "./GameBoard";
-import { ManaColor, Tile, TileType } from "./Tile";
+import { ManaColor, Tile, TileType } from "../models/Tile";
 import { printArray } from '../utils/utils'
 
 export class MatchesFinder {

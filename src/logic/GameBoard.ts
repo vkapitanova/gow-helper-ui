@@ -1,4 +1,4 @@
-import { Tile } from './Tile'
+import { Tile } from '../models/Tile'
 import { printArray } from '../utils/utils'
 
 export const boardSize: number = 8

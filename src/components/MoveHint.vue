@@ -16,16 +16,16 @@ let secondAddMove = moveAnalysis.nextMoveSummary?.additionalMove
 let tilesMove = moveAnalysis.move.moveType == MoveType.MoveTiles
 
 const captionsMap: Map<string, string> = new Map([
-  ['EM', '❌'],
-  ['YE', '🟨'],
-  ['RE', '🟥'],
-  ['GR', '🟩'],
-  ['BL', '🟦'],
-  ['BR', '🟫'],
-  ['VI', '🟪'],
-  ['SK', '💀'],
-  ['RS', '☠️'],
-  ['ANY', '🌈'],
+  ['empty', '❌'],
+  ['basic_yellow', '🟨'],
+  ['basic_red', '🟥'],
+  ['basic_green', '🟩'],
+  ['basic_blue', '🟦'],
+  ['basic_brown', '🟫'],
+  ['basiv_violet', '🟪'],
+  ['skull_normal', '💀'],
+  ['skull_rock', '☠️'],
+  ['any', '🌈'],
 ])
 
 </script>

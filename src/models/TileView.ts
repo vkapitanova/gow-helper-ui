@@ -1,6 +1,6 @@
 import { tileToString } from "../utils/transformers"
-import { Tile } from "../logic/Tile"
 import { generateRandomKey } from "../utils/utils"
+import { Tile } from "./Tile"
 
 export class TileView {
   tileClass: string
