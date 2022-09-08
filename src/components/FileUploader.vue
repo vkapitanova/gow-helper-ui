@@ -21,7 +21,7 @@ function upload() {
   detectGrid(baseUrl.value, selectedFile, selectedFile.type, (result: any) => {
     console.log(result)
     picture.value = "data:image/png;base64, " + result.grid
-    uploadPicture(baseUrl.value, selectedFile, result.x, result.y, result.grid_size, selectedFile.type, (result: any) => {emit('mapReloaded', result.map)})
+    uploadPicture(baseUrl.value, selectedFile, result.x, result.y, result.grid_size, selectedFile.type, (result: any) => {emit('mapReloaded', result)})
   })
 }
 

@@ -15,10 +15,14 @@ import { Card, getFrozenColors } from '../models/Cards'
 
 export interface BoardViewConfig {
   tilesList: Array<string>
+  myCards: Array<Card>
+  opponentCards: Array<Card>
 }
 
 let setup = defineProps<BoardViewConfig>()
 let tilesList: Array<string> = setup.tilesList
+let myCards: Array<Card> = setup.myCards
+let opponentCards: Array<Card> = setup.opponentCards
 
 type BoardView = Array<Array<TileView>>
 let board: BoardView = reactive([])
@@ -28,8 +32,6 @@ interface SuggestedMoves {
   moves: Array<MoveAnalysis>
 }
 let suggestedMoves: SuggestedMoves = reactive({moves: []})
-let myCards: Array<Card> = reactive([])
-let opponentCards: Array<Card> = reactive([])
 
 for (let i = 0; i < boardSize; i++) {
   board[i] = []
