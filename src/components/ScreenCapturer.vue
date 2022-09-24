@@ -19,9 +19,11 @@ let isActive = ref(false)
 
 function onChange(event: Event) {
   selectedWindow = event.target.value
+  electronAPI.selectWindow(selectedWindow)
 }
 
 let previousResult: Array<string> | null = null
+let gridParsed = false
 let coords: [string, string, string] = ["", "", ""]
 let picture = ref("")
 let pictureActive = ref(false)
@@ -34,21 +36,25 @@ function captureScreen() {
 }
 
 function uploadImage() {
+  if (!gridParsed) {
+    detectGrid(baseUrl.value, screenshotBuffer(), 'image/jpeg', (result) => {
+      if (previousResult == null || (!result.map.includes('UN')) && JSON.stringify(previousResult) !== JSON.stringify(result.map)) {
+        coords = [result.x, result.y, result.grid_size]
+        picture.value = "data:image/png;base64, " + result.grid
+        gridParsed = true
+        // electronAPI.followScreen(selectedWindow)
+        newPicture()
+      }
+    })
+  }
+}
+
+function newPicture() {
   let [x, y, grid_size] = coords
   uploadPicture(baseUrl.value, screenshotBuffer(), x, y, grid_size, 'image/jpeg', (result) => {
     if (previousResult == null || (!result.map.includes('UN')) && JSON.stringify(previousResult) !== JSON.stringify(result.map)) {
-      emit('mapReloaded', result.map)
+      emit('mapReloaded', result)
       previousResult = result.map
-    }
-  })
-}
-
-function uploadForGrid() {
-  detectGrid(baseUrl.value, screenshotBuffer(), 'image/jpeg', (result) => {
-    if (previousResult == null || (!result.map.includes('UN')) && JSON.stringify(previousResult) !== JSON.stringify(result.map)) {
-      coords = [result.x, result.y, result.grid_size]
-      picture.value = "data:image/png;base64, " + result.grid
-      electronAPI.selectWindow(selectedWindow)
     }
   })
 }
@@ -56,6 +62,7 @@ function uploadForGrid() {
 function pauseFollow() {
   isActive.value = false
   previousResult = null
+  gridParsed = false
   electronAPI.pauseFollow()
 }
 
@@ -66,12 +73,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :class="isActive ? '' : 'disabled'">
+  <div :class="isActive ? '' : 'disabled'" id="screen-capture" @newimage="uploadImage">
     <select id="sources-list" @ready="setWindowNames" @change="onChange">
       <option v-for="name in windowNames">{{name}}</option>
     </select>
-    <input id="screen-capture-button" type="button" value="Follow" @click="captureScreen" @newimage="uploadImage" @resimage="uploadForGrid"/>
-    <input id="screen-capture-button" type="button" value="Pause" @click="pauseFollow"/>
+    <!-- <input id="screen-capture-button" type="button" value="Follow" @click="captureScreen" @newimage="uploadImage"/> -->
+    <input type="button" value="Pause" @click="pauseFollow"/>
     <button @click="pictureActive = !pictureActive">{{pictureActive ? "hide board" : "show board" }}</button>
     <img v-if="pictureActive" :src="picture"/>
   </div>

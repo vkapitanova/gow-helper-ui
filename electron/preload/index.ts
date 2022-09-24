@@ -99,8 +99,9 @@ ipcRenderer.on('SET_SOURCES', async (event, sources) => {
   contextBridge.exposeInMainWorld('sources', sources)
   contextBridge.exposeInMainWorld('electronAPI', {
     getScreen: (windowName) => ipcRenderer.send('get-screen', windowName),
-    selectWindow: (windowName) => ipcRenderer.send('follow-screen', windowName),
-    pauseFollow: () => ipcRenderer.send('pause-follow')
+    selectWindow: (windowName) => ipcRenderer.send('select-window', windowName),
+    pauseFollow: () => ipcRenderer.send('pause-follow'),    
+    followScreen: (windowName) => ipcRenderer.send('follow-screen', windowName),
   })
   if (document.getElementById("sources-list") != null) {
     document.getElementById("sources-list").dispatchEvent(new Event('ready'))
@@ -114,12 +115,8 @@ ipcRenderer.on('SET_SOURCES', async (event, sources) => {
 var imageBuffer = null
 contextBridge.exposeInMainWorld('screenshotBuffer', () => imageBuffer)
 
-ipcRenderer.on('SET_REPEATED_SCREENSHOT', async (event, buffer) => {
-  imageBuffer = buffer
-  document.getElementById("screen-capture-button").dispatchEvent(new Event('newimage'))
-})
 ipcRenderer.on('SET_SCREENSHOT', async (event, buffer) => {
   imageBuffer = buffer
-  document.getElementById("screen-capture-button").dispatchEvent(new Event('resimage'))
+  document.getElementById("screen-capture").dispatchEvent(new Event('newimage'))
 })
 

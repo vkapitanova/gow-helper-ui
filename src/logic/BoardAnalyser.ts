@@ -76,13 +76,13 @@ export class BoardAnalyser {
       let passMove = !m1.move.moveResult.hasAdditionalMove
       // if opponent has additional move - sort last
       if (passMove) {
-        if (m1.nextMoveSummary!.additionalMove != m2.nextMoveSummary!.additionalMove)
-          return m1.nextMoveSummary!.additionalMove ? 1 : -1
+        if (m1.nextMoveSummary?.additionalMove != m2.nextMoveSummary?.additionalMove)
+          return m1.nextMoveSummary?.additionalMove ? 1 : -1
         if (m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) return 1
       // if there is my additional move after this one - sort first
       } else {
-        if (m1.nextMoveSummary!.additionalMove != m2.nextMoveSummary!.additionalMove)
-          return m1.nextMoveSummary!.additionalMove ? -1 : 1
+        if (m1.nextMoveSummary?.additionalMove != m2.nextMoveSummary?.additionalMove)
+          return m1.nextMoveSummary?.additionalMove ? -1 : 1
         if (m1.nextMoveSummary?.hit && !m2.nextMoveSummary?.hit) return -1
       }
       // if there's a hit - sort first
@@ -94,8 +94,8 @@ export class BoardAnalyser {
         return 1
       }
       // rest sort by collected mana considering main mana cards
-      let m1Mana = m1.move.collectedMana.map(([mana, amount]) => mainColors.has(mana) ? amount * 5 : amount ).reduce((a, b) => a + b)
-      let m2Mana = m2.move.collectedMana.map(([mana, amount]) => mainColors.has(mana) ? amount * 5 : amount ).reduce((a, b) => a + b)
+      let m1Mana = m1.move.collectedMana.map(([mana, amount]) => mainColors.has(mana) ? amount * 5 : amount ).reduce((a, b) => a + b, 0)
+      let m2Mana = m2.move.collectedMana.map(([mana, amount]) => mainColors.has(mana) ? amount * 5 : amount ).reduce((a, b) => a + b, 0)
       return m2Mana - m1Mana
     })
   }

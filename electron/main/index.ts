@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, globalShortcut } from 'electron'
 import { release } from 'os'
 import { join } from 'path'
 import { desktopCapturer } from 'electron'
@@ -53,7 +53,7 @@ async function createWindow() {
 
   if (app.isPackaged) {
     win.loadFile(indexHtml)
-    // win.webContents.openDevTools()
+    win.webContents.openDevTools()
   } else {
     win.loadURL(url)
     // Open devTool if the app is not packaged
@@ -74,7 +74,15 @@ async function createWindow() {
   // win.setAlwaysOnTop(true)
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  globalShortcut.register('Alt+Z', () => {
+    console.log('Shortcut captured')
+    if (windowName != "") {
+      console.log('Capturing window ', windowName)
+      getScreen()
+    }
+  })
+}).then(createWindow)
 
 app.on('window-all-closed', () => {
   win = null
@@ -124,7 +132,15 @@ desktopCapturer.getSources({ types: ['window'] }).then(async sources => {
 
 let followScreen = false
 
-ipcMain.on('get-screen', (event, windowName) => {
+ipcMain.on('get-screen', (event, name) => { windowName = name; getScreen() })
+
+var windowName = ""
+ipcMain.on('select-window', (event, name) => {
+  windowName = name
+})
+
+
+function getScreen() {
   desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
     for (const source of sources) {
       if (source.name == windowName) {
@@ -132,7 +148,7 @@ ipcMain.on('get-screen', (event, windowName) => {
       }
     }
   }) 
-})
+}
 
 ipcMain.on('follow-screen', (event, windowName) => {
   function captureScreen() {
