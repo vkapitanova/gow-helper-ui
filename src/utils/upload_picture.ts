@@ -1,7 +1,7 @@
 import axios from "axios"
 
 export function detectGrid(url: string, imageData: any, imageType: string, onFinish: (result: any) => void) {
-  console.log('uploading to: ', url)
+  console.log('uploading to: ', url + '/grid')
   axios.put(url + '/grid',
     imageData,
     {
@@ -15,7 +15,7 @@ export function detectGrid(url: string, imageData: any, imageType: string, onFin
 }
 
 export function uploadPicture(url: string, imageData: any, x: string, y: string, grid_size: string, imageType: string, onFinish: (result: any) => void) {
-  console.log('uploading to: ', url)
+  console.log('uploading to: ', url + '/tiles')
   axios.put(url + `/tiles?x=${x}&y=${y}&grid_size=${grid_size}`,
     imageData,
     {

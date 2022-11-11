@@ -92,17 +92,13 @@ window.onmessage = ev => {
 setTimeout(removeLoading, 4999)
 
 
+var windowNames = []
+
 // custom code
 import { ipcRenderer, contextBridge } from 'electron'
 ipcRenderer.on('SET_SOURCES', async (event, sources) => {
   console.log(sources)
-  contextBridge.exposeInMainWorld('sources', sources)
-  contextBridge.exposeInMainWorld('electronAPI', {
-    getScreen: (windowName) => ipcRenderer.send('get-screen', windowName),
-    selectWindow: (windowName) => ipcRenderer.send('select-window', windowName),
-    pauseFollow: () => ipcRenderer.send('pause-follow'),    
-    followScreen: (windowName) => ipcRenderer.send('follow-screen', windowName),
-  })
+  windowNames = sources
   if (document.getElementById("sources-list") != null) {
     document.getElementById("sources-list").dispatchEvent(new Event('ready'))
   } else {
@@ -111,6 +107,14 @@ ipcRenderer.on('SET_SOURCES', async (event, sources) => {
     }, false)  
   }
 })
+
+contextBridge.exposeInMainWorld('getWindowNames', () => windowNames)
+contextBridge.exposeInMainWorld('electronAPI', {
+  getScreen: (windowName) => ipcRenderer.send('get-screen', windowName),
+  selectWindow: (windowName) => ipcRenderer.send('select-window', windowName),
+  getSources: () => ipcRenderer.send('get-sources'),
+})
+
 
 var imageBuffer = null
 contextBridge.exposeInMainWorld('screenshotBuffer', () => imageBuffer)

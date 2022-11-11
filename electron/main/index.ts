@@ -75,7 +75,7 @@ async function createWindow() {
 }
 
 app.whenReady().then(() => {
-  globalShortcut.register('Alt+Z', () => {
+  globalShortcut.register('Alt+1', () => {
     console.log('Shortcut captured')
     if (windowName != "") {
       console.log('Capturing window ', windowName)
@@ -122,15 +122,18 @@ ipcMain.handle('open-win', (event, arg) => {
   }
 })
 
-desktopCapturer.getSources({ types: ['window'] }).then(async sources => {
-  const names = []
-  for (const source of sources) {
-    names.push(source.name)
-  }
-  win.webContents.send('SET_SOURCES', names)
-})
+function getSources() {
+  desktopCapturer.getSources({ types: ['window'] }).then(async sources => {
+    const names = []
+    for (const source of sources) {
+      names.push(source.name)
+    }
+    win.webContents.send('SET_SOURCES', names)
+  })  
+}
 
-let followScreen = false
+getSources()
+ipcMain.on('get-sources', (event) => { getSources() })
 
 ipcMain.on('get-screen', (event, name) => { windowName = name; getScreen() })
 
@@ -138,7 +141,6 @@ var windowName = ""
 ipcMain.on('select-window', (event, name) => {
   windowName = name
 })
-
 
 function getScreen() {
   desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
@@ -149,23 +151,3 @@ function getScreen() {
     }
   }) 
 }
-
-ipcMain.on('follow-screen', (event, windowName) => {
-  function captureScreen() {
-    desktopCapturer.getSources({ types: ['window'], thumbnailSize: {width: 1200, height: 1200} }).then(async sources => {
-      for (const source of sources) {
-        if (source.name == windowName) {
-          win.webContents.send('SET_REPEATED_SCREENSHOT', source.thumbnail.toJPEG(100))
-        }
-      }
-    }) 
-    if (followScreen) setTimeout(captureScreen, 1000) 
-  }
-  followScreen = true
-  captureScreen()
-})
-
-ipcMain.on('pause-follow', (event, windowName) => {
-  console.log("pausing follow")
-  followScreen = false
-})
